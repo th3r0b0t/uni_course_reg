@@ -235,3 +235,114 @@
 ## Open items
 - Who sets default tier definitions: the university or each field head?
 - Are cross-branch seats allowed as alternatives for losers?
+
+
+
+---
+
+# v6 changes (appended): seat-allocation priority rules
+
+**Context:** Defines the priority tiers and lottery rules used in the contested-seat round introduced in v5. Tier thresholds below are proposed defaults and can be tuned by the university or field heads.
+
+**Terms**
+- **In-parity course:** A course whose chart semester matches the current term's parity (e.g., an odd-semester course in an odd term).
+- **Off-parity course:** A course opened in a term of the other parity (e.g., an odd-semester course held in an even term).
+- **Near graduation:** A student whose remaining required units or terms are at or below a set threshold (open item below).
+
+## Assessment of the proposed rules
+
+| # | Rule | Verdict | Adjustment |
+|---|---|---|---|
+| 1 | Near-graduation students get priority for off-parity courses they need | Fair and useful. A lost seat costs them a whole extra year, and on-track students don't need off-parity courses. | Applies to required courses only, not electives. Needs an objective, data-derived definition of "near graduation". |
+| 2 | Repeaters get lower priority in-parity and higher priority off-parity | Fair. First-timers have no other chance this year, while repeaters get the course again next year. Off-parity terms mainly exist for repeaters. | Demotion, not exclusion. Near-graduation students are exempt from the demotion, or a failed final-term course could delay graduation by a year. |
+| 3 | Students who lost a lottery for a course they never enrolled in get high priority next time | Fair and useful. It stops the same student losing repeatedly and rewards waiting. | Must be earned only by actually applying and losing. Flag, not accumulating weight. Expires or is consumed on enrollment. |
+| 4 | Lottery numbers retained for the waitlist | Fair and simple. No re-draw, and it is reproducible from the logged seed. | Numbers are drawn per student, per course and per round, never one global number per student. |
+
+**Trade-off to note:** In-parity, bonus holders rank above current on-track first-timers. This favors the longest-waiting student, but it can push on-track students into next year's bonus pool. Capacity-first (adding seats) keeps this rare.
+
+## Final rules
+
+1. **Near-graduation priority (off-parity):** Near-graduation students who need the course (required, not elective) are top priority for off-parity courses.
+2. **Repeater adjustment:** Students who failed a course are demoted one tier for it when it is in-parity, and promoted when it is off-parity. Near-graduation students are exempt from the in-parity demotion.
+3. **Lottery-loser bonus:** A student who applied within the window and lost a contested draw for a course they have never enrolled in receives a priority bonus for that course next time. It is a flag, not an accumulating weight. Holders may be ordered by number of prior losses.
+4. **Retained numbers:** The random number from the lottery is stored per (student, course, round) and reused for the waitlist order.
+5. **Committed randomness (new):** The seed or a hash of it is committed before the round and published afterward, so the draw can be reproduced.
+6. **Bonus integrity (new):**
+   - Earned only by applying within the window while eligible and then losing.
+   - Consumed when the student takes a seat in that course.
+   - Forfeited if the student wins a seat and drops it after the add/drop deadline.
+   - Expires after a set number of terms (open item).
+7. **Waitlist handling (new):**
+   - Order is tier first, then retained number.
+   - Students who join after the window are appended in ingest-stamp order.
+   - Each offer has a response deadline. No response forfeits the offer and moves the student to the end.
+   - Students skipped because of a conflict or unit cap are notified with the reason.
+8. **Data-derived tiers (new):** Tiers are computed from the student profile (grades, chart, remaining units), never self-declared. Overrides keep the v5 rule of a recorded reason.
+
+### Tier order
+
+**In-parity course**
+| Tier | Who |
+|---|---|
+| 1 | Lottery-loser bonus holders |
+| 2 | Students for whom it is on the current chart semester (first attempt), students short of minimum units, near-graduation students who need it (including repeaters) |
+| 3 | Others (electives, students ahead of schedule) |
+| 4 | Repeaters, unless near graduation |
+
+**Off-parity course**
+| Tier | Who |
+|---|---|
+| 1 | Near-graduation students who need it |
+| 2 | Repeaters and lottery-loser bonus holders |
+| 3 | Others |
+
+Within each tier, order is by the retained lottery number.
+
+## Modified from previous versions
+- **v5, "Need-based priority tiers":** The criterion "previously failed or withdrawn" is superseded. Failed students are now demoted in-parity and promoted off-parity. Treatment of withdrawn students is an open item.
+- **v5, "Soft landing for losers":** "Optional priority next semester" is now rule 3.
+- **v5, waitlist:** Rule 4 confirms retained numbers. Rule 7 defines late joiners and offer deadlines.
+- **v5, open items:** "Who sets default tier definitions" now has a proposal: the university approves the tier framework, and heads tune thresholds within set bounds. Awaiting your confirmation.
+- **v4, assumptions:** "Batch allocation ... not yet confirmed" was confirmed in v5. The tiers are now defined here.
+- **v4, Pros 5, last bullet:** "Random order within priority tiers" now refers to the tier tables above.
+- **v4, Cons 10, "Perceived unfairness":** Tiers now exist, but rule complexity adds a new risk (see New Cons).
+- **v4, Cons 7, "Eligibility rules correctness":** Grades, graduation status, and chart data now also drive priorities, so errors affect allocation directly.
+- **v4, Cons 6, "Cross-branch rules":** The bonus flag and repeater history live in the student's home partition so they carry across branches.
+
+## New Pros
+- **Rewards waiting:** Lottery losers are not stuck losing repeatedly.
+- **Protects graduation timelines:** Near-graduation students get first access to off-parity courses and are exempt from repeater demotion.
+- **Matches seats to real need:** Off-parity terms serve the students who need them.
+- **Independent draws per course:** One unlucky number cannot sink a student across all their courses.
+- **Verifiable randomness:** Committed seed plus retained numbers make every outcome reproducible and auditable.
+- **Predictable waitlists:** Students see their position and the reason for it.
+
+## New Cons
+- **Rule complexity:** Four tier orderings and a bonus are harder to explain, and students may misread them.
+- **Definition disputes:** "Near graduation" and "needs it" thresholds will be contested.
+- **Repeater starvation:** Repeaters can lose in-parity repeatedly, and may face the same demotion again.
+- **Bonus displacement:** Bonus holders can push on-track students into next year's bonus pool.
+- **Bonus gaming:** Students may apply to popular courses to build bonuses, or win and drop late.
+- **Rule interaction bugs:** Overlapping rules (repeater and near-graduation, bonus and repeater) need exhaustive testing.
+- **Bonus bookkeeping:** Storing and expiring bonuses across terms, branches, and transfers adds data and audit work.
+- **Dependence on data quality:** Wrong grades or graduation status silently change who gets seats.
+
+## New Mitigations
+| Risk | Mitigation |
+|---|---|
+| Rule complexity | One-page published explanation, a "why is my position X" view for each student |
+| Definition disputes | Objective thresholds approved in advance, derived from profile data only |
+| Repeater starvation | Demotion by one tier only, near-graduation exemption, capacity-first, optional cap on consecutive demotions |
+| Bonus displacement | Capacity-first, monitoring of bonus-pool size per course |
+| Bonus gaming | Earned only by applying while eligible, forfeited on late drop, consumed on enrollment, expiry |
+| Rule interaction bugs | Written tier specification, test cases for every rule combination, reproducible runs from logged seeds |
+| Bonus bookkeeping | Store flags in the home partition, include them in audit logs and transfer procedures |
+| Data quality | Validation and reconciliation of grades before each round, correction path through appeals |
+
+## Open items
+- How is "near graduation" defined (remaining units, remaining terms, or both), and who sets the threshold?
+- How long does the lottery-loser bonus last before expiring?
+- How are withdrawn (not failed) students treated?
+- Should repeaters get a cap on consecutive in-parity demotions?
+- Do bonuses carry across branches and on transfer?
+- Confirm: the university approves the tier framework and heads tune thresholds.
