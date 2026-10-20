@@ -190,3 +190,48 @@
 - **Removed:** Weak and unpatched hardware, heterogeneous environment, cross-site seat conflicts, profile-sync timing, over-trusting dashboards, and the what-if interaction between accepted requests. Each is now handled by your decisions or guarantees.
 - **Reduced:** Network bottleneck (now only cross-data-center replication) and governance (one owner).
 - **Added:** Branch-local design, process and organizational change, procedure mismatch in the parallel run, interface complexity, and the HA cost.
+
+---
+
+# v5 changes (appended): final manual seat-allocation phase
+
+**Context:** In the completion round, when candidates exceed free seats, no mechanism is perfectly fair. Agreed approach: add capacity first; if still oversubscribed, heads choose a published, rule-based policy (priority tiers, then lottery) and the system executes it. Heads set the rule, not individual winners.
+
+## Modified from v4
+- **Time buckets (Pros 5, Mitigations "Ingest saturation and bots"):** For contested seats, time buckets are replaced by a lottery over everyone who applied within an open window (a few hours, wide enough to be open to all). Exact click time is irrelevant. Ingest-stamp ordering remains only for non-contested cases.
+- **Waitlist (Pros 6):** Waitlist order after a contested round is the random-lottery order, not the ingest-stamp order.
+- **Batch allocation (Pros 5):** Now confirmed: priority tiers by need, random order within a tier.
+- **Perceived unfairness (Cons 10):** Reframed: fairness means a consistent, published, auditable process, not equal outcomes.
+
+## New Pros
+- **Capacity first:** Adding seats or sections during add/drop resolves most oversubscription at low cost.
+- **Need-based priority tiers:** Objective criteria (course on the student's current chart semester or near graduation; previously failed or withdrawn; short of minimum units) shrink the contested pool before any randomness.
+- **Lottery within tiers:** No timing advantage, so bots and network quality gain nothing.
+- **Heads set policy, system executes:** Reduces favoritism, pressure, and heads' workload compared to hand-picking winners.
+- **Transparency and auditability:** Rules published before each round, random seed logged and published afterward, full audit log.
+- **Soft landing for losers:** Randomly ordered waitlist, alternatives shown (other sections, other branches if allowed), optional priority next semester.
+- **Documented exceptions:** Limited overrides (e.g., disability accommodations) with a recorded reason.
+
+## New Cons
+- **Heads' extra workload:** Choosing tiers, publishing rules, and handling exceptions each round.
+- **Tier-definition disputes:** Priority criteria always create arguments about who qualifies.
+- **Lottery feels arbitrary** to students who need one specific course.
+- **Appeals burden:** An appeals process needs staff, time limits, and rules.
+- **Override abuse:** Exceptions can become a favoritism channel without strict logging and review.
+- **Randomness verification:** Seed generation and logging must be trustworthy, or the lottery is not credible.
+- **Policy approval:** Tier rules and the lottery need approval from the university, which adds to the organizational risk in Cons 7.
+
+## New Mitigations
+| Risk | Mitigation |
+|---|---|
+| Heads' workload | Policy templates, rules reused across rounds, add capacity first |
+| Tier-definition disputes | Objective, data-derived criteria; rules published before the round |
+| Lottery feels arbitrary | Randomly ordered waitlist, shown alternatives, next-round priority for losers |
+| Appeals burden | Defined appeals path with deadlines, decisions logged |
+| Override abuse | Limited override categories, mandatory recorded reason, periodic audit |
+| Randomness credibility | Logged seed, published after the round, reproducible allocation run |
+| Policy approval | Early sign-off from head of education on tiers and lottery |
+
+## Open items
+- Who sets default tier definitions: the university or each field head?
+- Are cross-branch seats allowed as alternatives for losers?
