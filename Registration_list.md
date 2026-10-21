@@ -346,3 +346,9 @@ Within each tier, order is by the retained lottery number.
 - Should repeaters get a cap on consecutive in-parity demotions?
 - Do bonuses carry across branches and on transfer?
 - Confirm: the university approves the tier framework and heads tune thresholds.
+
+---
+# V7 changes
+
+## New pros
+- **Earlier class starts:** Because most students get their chosen courses in pre-registration, few change classes during add/drop. Lecturers can start teaching in the first week instead of waiting for the add/drop period to end.
